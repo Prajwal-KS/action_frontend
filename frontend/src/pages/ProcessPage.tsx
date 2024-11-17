@@ -13,6 +13,7 @@ const api = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning' : 'whatever',
   },
 });
 
@@ -54,7 +55,12 @@ const ProcessPage = () => {
 
     try {
       // Check server health
-      const healthCheck = await api.get('/health');
+      const healthCheck = await api.get('/health', {
+        headers: {
+          'ngrok-skip-browser-warning' : 'whatever',
+        },
+        
+      });
       if (!healthCheck.data.models_status[detectionType]) {
         throw new Error(`${detectionType} model is not available`);
       }
@@ -62,6 +68,7 @@ const ProcessPage = () => {
       const response = await api.post('/upload_video/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'ngrok-skip-browser-warning' : 'whatever',
         },
         params: {
           detection_type: detectionType,
@@ -219,6 +226,10 @@ const ProcessPage = () => {
     try {
       const response = await api.get(processedVideo.replace('/outputs/', '/download/'), {
         responseType: 'blob',
+
+        headers: {
+          'ngrok-skip-browser-warning' : 'whatever',
+        },
       });
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
