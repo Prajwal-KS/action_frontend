@@ -58,16 +58,18 @@ const ProcessPage = () => {
     setError,
     analysisReport,
     setAnalysisReport,
+    firstFrame,
+    setfirstFrame,
   } = useProcess();
   
-  const [firstFrame, setFirstFrame] = useState<string | null>(null);
+  
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
     setProcessedVideo(null);
     setError(null);
     setAnalysisReport(null);
-    setFirstFrame(null);
+    setfirstFrame(null);
   };
 
   const handleUpload = async () => {
@@ -121,7 +123,7 @@ const ProcessPage = () => {
         const processedVideoUrl = `${API_URL}/outputs/${response.data.filename}`;
         setProcessedVideo(processedVideoUrl);
         setAnalysisReport(response.data.report);
-        setFirstFrame(response.data.first_frame);
+        setfirstFrame(response.data.first_frame);
       } else {
         throw new Error('No filename received from server');
       }

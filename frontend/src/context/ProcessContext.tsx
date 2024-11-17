@@ -35,6 +35,8 @@ interface ProcessContextType {
   setError: (error: string | null) => void;
   analysisReport: AnalysisReport | null;
   setAnalysisReport: (report: AnalysisReport | null) => void;
+  firstFrame: string | null;
+  setfirstFrame: (url: string | null) => void;
 }
 
 const ProcessContext = createContext<ProcessContextType | undefined>(undefined);
@@ -47,6 +49,7 @@ export const ProcessProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analysisReport, setAnalysisReport] = useState<AnalysisReport | null>(null);
+  const [firstFrame, setfirstFrame] = useState<string | null>(null);
 
   return (
     <ProcessContext.Provider
@@ -65,6 +68,8 @@ export const ProcessProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setError,
         analysisReport,
         setAnalysisReport,
+        firstFrame,
+        setfirstFrame,
       }}
     >
       {children}
