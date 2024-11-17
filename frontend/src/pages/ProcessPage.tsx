@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import { Play, Download, AlertCircle, FileDown } from 'lucide-react';
 import FileUpload from '../components/FileUpload';
@@ -12,10 +12,35 @@ const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
   headers: {
+    'Accept': '*/*',
+    'Access-Control-Allow-Origin': '*',
     'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'whatever'
-  },
+    'ngrok-skip-browser-warning': 'true'
+  }
 });
+
+api.interceptors.request.use(
+  (config) => {
+    // Ensure headers object exists
+    //@ts-ignore
+    config.headers = {
+      ...config.headers,
+      'Accept': '*/*',
+      'Access-Control-Allow-Origin': '*',
+      'ngrok-skip-browser-warning': 'true'
+    };
+
+    // Special handling for FormData requests
+    if (config.data instanceof FormData) {
+      config.headers['Content-Type'] = 'multipart/form-data';
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 const ProcessPage = () => {
   const {
@@ -55,16 +80,31 @@ const ProcessPage = () => {
     formData.append('detection_type', detectionType);
 
     try {
-      // Check server health with ngrok header
-      const healthCheck = await api.get('/health');
+      // Health check with explicit headers
+      const healthCheck = await axios({
+        method: 'get',
+        url: `${API_URL}/health`,
+        headers: {
+          'Accept': '*/*',
+          'Access-Control-Allow-Origin': '*',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+
       if (!healthCheck.data.models_status[detectionType]) {
         throw new Error(`${detectionType} model is not available`);
       }
 
-      const response = await api.post('/upload_video/', formData, {
+      // Upload request with explicit headers
+      const response = await axios({
+        method: 'post',
+        url: `${API_URL}/upload_video/`,
+        data: formData,
         headers: {
+          'Accept': '*/*',
+          'Access-Control-Allow-Origin': '*',
           'Content-Type': 'multipart/form-data',
-          'ngrok-skip-browser-warning': 'whatever'
+          'ngrok-skip-browser-warning': 'true'
         },
         params: {
           detection_type: detectionType,
@@ -81,7 +121,7 @@ const ProcessPage = () => {
         const processedVideoUrl = `${API_URL}/outputs/${response.data.filename}`;
         setProcessedVideo(processedVideoUrl);
         setAnalysisReport(response.data.report);
-        setFirstFrame(response.data.first_frame);  // Set the first frame
+        setFirstFrame(response.data.first_frame);
       } else {
         throw new Error('No filename received from server');
       }
@@ -221,8 +261,15 @@ const ProcessPage = () => {
     if (!processedVideo) return;
     
     try {
-      const response = await api.get(processedVideo.replace('/outputs/', '/download/'), {
+      const response = await axios({
+        method: 'get',
+        url: processedVideo.replace('/outputs/', '/download/'),
         responseType: 'blob',
+        headers: {
+          'Accept': '*/*',
+          'Access-Control-Allow-Origin': '*',
+          'ngrok-skip-browser-warning': 'true'
+        }
       });
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
