@@ -405,7 +405,7 @@ const ProcessPage = () => {
           className="btn-primary bg-green-600 hover:bg-green-700"
         >
           <Download className="w-4 h-4" />
-          <span>Download Processed Video</span>
+          <span>Download Video</span>
         </button>
       </div>
 
