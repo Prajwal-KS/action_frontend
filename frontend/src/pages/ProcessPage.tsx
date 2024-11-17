@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import axios from 'axios';
 import { Play, Download, AlertCircle, FileDown } from 'lucide-react';
 import FileUpload from '../components/FileUpload';
@@ -13,6 +13,7 @@ const api = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'whatever'
   },
 });
 
@@ -34,13 +35,14 @@ const ProcessPage = () => {
     setAnalysisReport,
   } = useProcess();
   
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [firstFrame, setFirstFrame] = useState<string | null>(null);
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
     setProcessedVideo(null);
     setError(null);
     setAnalysisReport(null);
+    setFirstFrame(null);
   };
 
   const handleUpload = async () => {
@@ -53,7 +55,7 @@ const ProcessPage = () => {
     formData.append('detection_type', detectionType);
 
     try {
-      // Check server health
+      // Check server health with ngrok header
       const healthCheck = await api.get('/health');
       if (!healthCheck.data.models_status[detectionType]) {
         throw new Error(`${detectionType} model is not available`);
@@ -62,6 +64,7 @@ const ProcessPage = () => {
       const response = await api.post('/upload_video/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'ngrok-skip-browser-warning': 'whatever'
         },
         params: {
           detection_type: detectionType,
@@ -78,6 +81,7 @@ const ProcessPage = () => {
         const processedVideoUrl = `${API_URL}/outputs/${response.data.filename}`;
         setProcessedVideo(processedVideoUrl);
         setAnalysisReport(response.data.report);
+        setFirstFrame(response.data.first_frame);  // Set the first frame
       } else {
         throw new Error('No filename received from server');
       }
@@ -328,29 +332,35 @@ const ProcessPage = () => {
 
       {/* Processed Video Section */}
       {processedVideo && (
-        <div className="card space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Processed Video
-          </h2>
-          
-          <div className="rounded-lg overflow-hidden shadow-xl">
-            <video
-              ref={videoRef}
-              src={processedVideo}
-              controls
-              className="w-full"
+    <div className="card space-y-6">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        Processed Video
+      </h2>
+      
+      <div className="rounded-lg overflow-hidden shadow-xl">
+        {firstFrame && (
+          <div className="relative">
+            <img 
+              src={`data:image/jpeg;base64,${firstFrame}`}
+              alt="First frame of processed video"
+              className="w-full rounded-lg"
             />
+            <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+              Preview Image
+            </div>
           </div>
+        )}
+      </div>
 
-          <div className="flex flex-wrap gap-4">
-            <button
-              onClick={handleDownload}
-              className="btn-primary bg-green-600 hover:bg-green-700"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download Video</span>
-            </button>
-          </div>
+      <div className="flex flex-wrap gap-4">
+        <button
+          onClick={handleDownload}
+          className="btn-primary bg-green-600 hover:bg-green-700"
+        >
+          <Download className="w-4 h-4" />
+          <span>Download Processed Video</span>
+        </button>
+      </div>
 
           {/* Analysis Report */}
           {analysisReport && (
