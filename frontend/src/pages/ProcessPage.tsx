@@ -13,8 +13,6 @@ const api = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'true',
-    'User-Agent': 'Custom-User-Agent' 
   },
 });
 
@@ -64,8 +62,6 @@ const ProcessPage = () => {
       const response = await api.post('/upload_video/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'ngrok-skip-browser-warning': 'true',
-          'User-Agent': 'Custom-User-Agent'
         },
         params: {
           detection_type: detectionType,
@@ -79,23 +75,9 @@ const ProcessPage = () => {
       });
 
       if (response.data.filename) {
-        // Create a proxied URL for the video that includes necessary headers
         const processedVideoUrl = `${API_URL}/outputs/${response.data.filename}`;
         setProcessedVideo(processedVideoUrl);
         setAnalysisReport(response.data.report);
-        
-        // If video element exists, set custom headers for video requests
-        if (videoRef.current) {
-          videoRef.current.addEventListener('loadstart', () => {
-            const headers = new Headers({
-              'ngrok-skip-browser-warning': 'true',
-              'User-Agent': 'Custom-User-Agent'
-            });
-            
-            // Force reload the video with the new headers
-            videoRef.current!.load();
-          });
-        }
       } else {
         throw new Error('No filename received from server');
       }
@@ -237,10 +219,6 @@ const ProcessPage = () => {
     try {
       const response = await api.get(processedVideo.replace('/outputs/', '/download/'), {
         responseType: 'blob',
-        headers: {
-          'ngrok-skip-browser-warning': 'true',
-          'User-Agent': 'Custom-User-Agent'
-        }
       });
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -260,32 +238,6 @@ const ProcessPage = () => {
   const downloadReport = () => {
     if (!analysisReport) return;
     generatePDFReport();
-  };
-
-  const getVideoSource = () => {
-    if (!processedVideo) return '';
-    
-    // Create a blob URL with custom headers
-    const fetchVideo = async () => {
-      try {
-        const response = await fetch(processedVideo, {
-          headers: {
-            'ngrok-skip-browser-warning': 'true',
-            'User-Agent': 'Custom-User-Agent'
-          }
-        });
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        if (videoRef.current) {
-          videoRef.current.src = url;
-        }
-      } catch (error) {
-        console.error('Error loading video:', error);
-      }
-    };
-    
-    fetchVideo();
-    return '';
   };
 
   return (
@@ -383,10 +335,10 @@ const ProcessPage = () => {
           
           <div className="rounded-lg overflow-hidden shadow-xl">
             <video
+              ref={videoRef}
+              src={processedVideo}
               controls
               className="w-full"
-              key={processedVideo} // Add key to force re-render when URL changes
-              onLoadStart={() => getVideoSource()}
             />
           </div>
 
