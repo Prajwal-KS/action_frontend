@@ -253,7 +253,7 @@ const ProcessPage = () => {
       ([className, count]) => [
         //@ts-ignore
         classLabels[className] || className, // Use label if available, else original className
-        count.toString()
+        (count/(analysisReport.video_duration_seconds*30)).toFixed(2).toString()
       ]
     );
     // @ts-ignore
@@ -529,10 +529,26 @@ const ProcessPage = () => {
                   //@ts-ignore
                   const displayName = classLabels[className] || className;
 
+                  const percentage = ((count as number) / analysisReport.total_detections * 100).toFixed(1);
+                  const avgPerSecond = ((count as number) / analysisReport.video_duration_seconds);
+
                   return (
-                    <div key={className} className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">{displayName}</span>
-                      <span className="font-medium text-gray-900 dark:text-white">{count}</span>
+                    <div key={className} className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">{displayName}</span>
+                        <div className="text-right">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {(avgPerSecond/30).toFixed(2)} ({percentage}%)
+                          </span>
+                        </div>
+                      </div>
+                      {/* Add a progress bar to visualize the proportion */}
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div 
+                          className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
                     </div>
                   );
                 })}
