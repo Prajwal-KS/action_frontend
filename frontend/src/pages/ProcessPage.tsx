@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Play, Download, AlertCircle, FileDown } from 'lucide-react';
 import FileUpload from '../components/FileUpload';
@@ -62,7 +62,17 @@ const ProcessPage = () => {
     setfirstFrame,
   } = useProcess();
   
-  
+  const scrollTargetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (processedVideo && scrollTargetRef.current) {
+      const topOffset = scrollTargetRef.current.offsetTop - 100; // Add 100px padding from top
+      window.scrollTo({
+        top: topOffset,
+        behavior: 'smooth'
+      });
+    }
+  }, [processedVideo]);
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
@@ -381,7 +391,7 @@ const ProcessPage = () => {
 
       {/* Processed Video Section */}
       {processedVideo && (
-    <div className="card space-y-6">
+    <div ref={scrollTargetRef} className="card space-y-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
         Processed Video
       </h2>
